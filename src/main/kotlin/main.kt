@@ -9,9 +9,9 @@ import util.secondsToString
 import java.io.File
 import java.util.*
 
-fun main(vararg args: String) {
-    val reader = Scanner(System.`in`)
+fun main(args: Array<String>) {
     print("Enter toggle URL: ")
+    val reader = Scanner(System.`in`)
     val url = reader.nextLine()!!.trim()
     val client = HttpClient()
     runBlocking {
