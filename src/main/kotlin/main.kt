@@ -9,7 +9,7 @@ import util.secondsToString
 import java.io.File
 import java.util.*
 
-fun main(args: Array<String>) {
+fun main() {
     print("Enter toggle URL: ")
     val reader = Scanner(System.`in`)
     val url = reader.nextLine()!!.trim()
@@ -48,17 +48,13 @@ fun main(args: Array<String>) {
         }
         val tsFiles = mutableListOf<Pair<String,Int>>()
         var currentVal = -1
-        var i=0
-        println(streamUrl)
         download(streamUrl, client).lines().forEach {
-            if(i==10) return@forEach
             if (it.startsWith("#EXTINF")) {
 //                Time indicator
                 currentVal = it.substringAfter(":").substringBefore(".").toInt()
             } else if (it.contains("http")) {
 //                Url
                 tsFiles.add(it to currentVal)
-                i++
             }
         }
         downloadTSFiles(tsFiles, client, outputDirectory)
