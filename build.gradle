@@ -39,6 +39,6 @@ compileKotlin {
 
 mainClassName = "main.MainKt"
 
-shadowJar{
+shadowJar {
     baseName = "toggle-download"
 }
