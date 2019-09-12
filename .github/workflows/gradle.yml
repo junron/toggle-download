@@ -13,8 +13,13 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 11
-      - name: Build with Gradle
+      - name: Build shadowJar
         run: |
-          pwd
           chmod +x ./gradlew
-          ./gradlew build
+          ./gradlew shadowJar
+      steps:
+        - uses: Shopify/upload-to-release
+          with:
+            name: toggle-download-jar
+            path: build/libs/toggle-download-all.jar
+            repo-token: ${{ secrets.GITHUB_TOKEN }}
