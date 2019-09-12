@@ -44,7 +44,8 @@ suspend fun downloadTSFiles(files: MutableList<Pair<String, Int>>, client: HttpC
   withContext(Dispatchers.IO) {
     files.forEach {
       val (url, duration) = it
-      val fileName = "video-$totalDuration-${totalDuration + duration}.mpeg"
+      val fileName = "video-${totalDuration.toString().padStart(4, '0')}" +
+              "-${(totalDuration + duration).toString().padStart(4, '0')}.mpeg"
       totalDuration += duration
       launch {
         val data = downloadBinary(url, client)
