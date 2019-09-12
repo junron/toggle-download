@@ -17,8 +17,11 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew shadowJar
-      - uses: Shopify/upload-to-release@v1.0.0
-        with:
-          name: toggle-download-jar
-          path: build/libs/toggle-download-all.jar
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - - name: Upload binaries to release
+            uses: svenstaro/upload-release-action@v1-release
+            with:
+              repo_token: ${{ secrets.GITHUB_TOKEN }}
+              file: build/libs/toggle-download-all.jar
+              asset_name: jars
+              tag: ${{ github.ref }}
+              overwrite: true
