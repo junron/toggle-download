@@ -36,7 +36,7 @@ suspend fun downloadBinary(url: String, client: HttpClient) = client.request<Byt
     method = HttpMethod.Get
 }
 
-suspend fun downloadTSFiles(files: HashMap<String, Int>, client: HttpClient, outputDirectory: File) {
+suspend fun downloadTSFiles(files: MutableList<Pair<String, Int>>, client: HttpClient, outputDirectory: File) {
     var totalDuration = 0
     val outputFilePath = outputDirectory.absolutePath
     var k =0

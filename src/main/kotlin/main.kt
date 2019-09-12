@@ -46,15 +46,19 @@ fun main(args: Array<String>) {
         if (!outputDirectory.exists()) {
             outputDirectory.mkdir()
         }
-        val tsFiles = hashMapOf<String, Int>()
+        val tsFiles = mutableListOf<Pair<String,Int>>()
         var currentVal = -1
+        var i=0
+        println(streamUrl)
         download(streamUrl, client).lines().forEach {
+            if(i==10) return@forEach
             if (it.startsWith("#EXTINF")) {
 //                Time indicator
                 currentVal = it.substringAfter(":").substringBefore(".").toInt()
             } else if (it.contains("http")) {
 //                Url
-                tsFiles[it] = currentVal
+                tsFiles.add(it to currentVal)
+                i++
             }
         }
         downloadTSFiles(tsFiles, client, outputDirectory)
