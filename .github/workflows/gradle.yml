@@ -17,7 +17,7 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew shadowJar
-      - uses: Shopify/upload-to-release@1.0.0
+      - uses: Shopify/upload-to-release@v1.0.0
         with:
           name: toggle-download-jar
           path: build/libs/toggle-download-all.jar
