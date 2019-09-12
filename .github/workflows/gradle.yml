@@ -14,7 +14,7 @@ jobs:
         with:
           java-version: 11
       - name: Build with Gradle
-        run:
-          - pwd
-          - chmod +x ./gradlew
-          - ./gradlew build
+        run: |
+          pwd
+          chmod +x ./gradlew
+          ./gradlew build
