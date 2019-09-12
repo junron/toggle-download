@@ -22,6 +22,6 @@ jobs:
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           file: build/libs/toggle-download-all.jar
-          asset_name: jars
-          tag: ${{ github.ref }}
+          asset_name: toggle-download.jar
+          tag: ${{ github.event_name }}
           overwrite: true
