@@ -7,6 +7,7 @@ import io.ktor.client.HttpClient
 import javafx.scene.control.*
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.HBox
+import javafx.stage.DirectoryChooser
 import kotlinx.coroutines.runBlocking
 import main.util.parseResolutions
 import main.util.parseStreamUrl
@@ -23,9 +24,12 @@ class AppView : View() {
   private val mediaData: Label by fxid("mediaData")
   private val resolutionSelectHBox: HBox by fxid("resolutionSelectHbox")
   private val resolutionSelect: ComboBox<String> by fxid("resolutionSelect")
-  private val resolutionSelectButton: Button by fxid("confirmResolution")
+  private val downloadBtn: Button by fxid("confirmResolution")
   private val progressBar: ProgressBar by fxid("progressBar")
   private val progressLabel: Label by fxid("progressExact")
+  private val outDirLabel: Label by fxid("outputDirectory")
+  private val selectDir: Button by fxid("selectOutputDirectory")
+
 
   private val client = HttpClient()
 
@@ -34,8 +38,7 @@ class AppView : View() {
   private lateinit var outputDirectory: File
 
   init {
-
-    checkUrlBtn.setOnAction {
+    checkUrlBtn.action {
       val url = toggleUrl.text
       //      Get media name
       mediaData.text = "Checking..."
@@ -43,9 +46,6 @@ class AppView : View() {
         try {
           runBlocking {
             val (m3Url, mediaName, mediaDuration) = getVideoData(url, client)
-            //            Create media output directory
-            outputDirectory = File("output-$mediaName")
-            if (!outputDirectory.exists()) outputDirectory.mkdir()
             //            Get resolutions
             resolutions = parseResolutions(download(m3Url, client))
             """
@@ -67,12 +67,27 @@ class AppView : View() {
           checkUrlBtn.isDisable = true
           toggleUrl.isDisable = true
           resolutionSelectHBox.isVisible = true
+          selectDir.isDisable = false
         }
       }
     }
 
+    selectDir.action {
+      val selectedDirectory = with(DirectoryChooser()) {
+        title = "Choose directory"
+        showDialog(null)
+      }
+      if (selectedDirectory == null) {
+        outDirLabel.text = "None"
+        downloadBtn.isDisable = true
+      }else{
+        outputDirectory = selectedDirectory
+        outDirLabel.text = outputDirectory.path
+        downloadBtn.isDisable = false
+      }
+    }
 
-    resolutionSelectButton.setOnAction {
+    downloadBtn.action {
       val selectedResolution = resolutionSelect.selectionModel.selectedItem
       val streamUrl = this.resolutions.find { (k, _) -> k == selectedResolution }?.second!!
       //    Progress bars
@@ -87,9 +102,9 @@ class AppView : View() {
             updateMessage("$current/$max")
           }
         }
-      }ui {
-        alert(Alert.AlertType.INFORMATION,header = "Completed"){
-          contentText ="Download completed successfully"
+      } ui {
+        alert(Alert.AlertType.INFORMATION, header = "Completed") {
+          contentText = "Download completed successfully"
           showAndWait()
         }
       }
