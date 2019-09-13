@@ -4,15 +4,14 @@ import http.download
 import http.downloadTSFiles
 import http.getVideoData
 import io.ktor.client.HttpClient
+import io.ktor.client.features.ClientRequestException
 import javafx.scene.control.*
 import javafx.scene.layout.AnchorPane
 import javafx.scene.layout.HBox
 import javafx.stage.DirectoryChooser
 import kotlinx.coroutines.runBlocking
-import main.util.parseResolutions
-import main.util.parseStreamUrl
+import main.util.*
 import tornadofx.*
-import util.secondsToString
 import java.io.File
 import java.net.ConnectException
 
@@ -21,7 +20,7 @@ class AppView : View() {
   override val root: AnchorPane by fxml("/main.fxml")
   private val toggleUrl: TextField by fxid("toggleUrl")
   private val checkUrlBtn: Button by fxid("downloadButton")
-  private val mediaData: Label by fxid("mediaData")
+  private val mediaData: HBox by fxid("mediaData")
   private val resolutionSelectHBox: HBox by fxid("resolutionSelectHbox")
   private val resolutionSelect: ComboBox<String> by fxid("resolutionSelect")
   private val downloadBtn: Button by fxid("confirmResolution")
@@ -41,23 +40,31 @@ class AppView : View() {
     checkUrlBtn.action {
       val url = toggleUrl.text
       //      Get media name
-      mediaData.text = "Checking..."
+      mediaData.getChildList()?.clear()
+      mediaData.getChildList()?.add(label("Checking..."))
       runAsync {
         try {
           runBlocking {
-            val (m3Url, mediaName, mediaDuration) = getVideoData(url, client)
+            val mediaData = getVideoData(url, client)
+            val m3Url = mediaData.files.getM3U8FileByFormat("HLS_Web")?.url
+                    ?: return@runBlocking errorLabel("M3U8 file with suitable format not found")
             //            Get resolutions
             resolutions = parseResolutions(download(m3Url, client))
-            """
-            Media name: $mediaName
-            Runtime: $mediaDuration seconds (${secondsToString(mediaDuration)})
-            """.trimIndent()
+            mediaData.renderGUIComponent()
           }
-        } catch (e: ConnectException) {
-          "Connection failed: $e"
+        } catch (e: Exception) {
+          when(e){
+            is ConnectException, is ClientRequestException ->{
+              errorLabel("Connection failed: $e")
+            }
+            else -> {
+              e.printStackTrace()
+              errorLabel("Unknown exception: $e")
+            }
+          }
         }
       } ui {
-        mediaData.text = it
+        mediaData.setChild(it.root)
 
         if (this::resolutions.isInitialized) {
           //Set resolution data
@@ -80,7 +87,7 @@ class AppView : View() {
       if (selectedDirectory == null) {
         outDirLabel.text = "None"
         downloadBtn.isDisable = true
-      }else{
+      } else {
         outputDirectory = selectedDirectory
         outDirLabel.text = outputDirectory.path
         downloadBtn.isDisable = false

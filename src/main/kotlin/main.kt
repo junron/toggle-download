@@ -5,6 +5,7 @@ import http.downloadTSFiles
 import http.getVideoData
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.runBlocking
+import main.util.getM3U8FileByFormat
 import main.util.parseResolutions
 import main.util.parseStreamUrl
 import me.tongfei.progressbar.ProgressBarBuilder
@@ -19,10 +20,11 @@ fun main() {
   val url = reader.nextLine()!!.trim()
   val client = HttpClient()
   runBlocking {
-    val (m3Url, mediaName, mediaDuration) = getVideoData(url, client)
+    val (mediaName, _, mediaDuration, files) = getVideoData(url, client)
     println("Processing video: $mediaName")
-    println("Runtime: $mediaDuration seconds (${secondsToString(mediaDuration)})")
-
+    println("Runtime: $mediaDuration seconds (${secondsToString(mediaDuration.toInt())})")
+    val m3Url = files.getM3U8FileByFormat("HLS_Web")?.url
+            ?: return@runBlocking println("M3U8 file with suitable format not found")
     val resolutionData = download(m3Url, client)
     val resolutions = parseResolutions(resolutionData)
     if (resolutions.isEmpty()) {

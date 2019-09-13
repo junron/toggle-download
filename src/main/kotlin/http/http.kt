@@ -1,16 +1,15 @@
 package http
 
+import com.beust.klaxon.Klaxon
 import io.ktor.client.HttpClient
 import io.ktor.client.request.headers
 import io.ktor.client.request.request
 import io.ktor.client.request.url
 import io.ktor.http.HttpMethod
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import me.tongfei.progressbar.ProgressBarBuilder
-import me.tongfei.progressbar.ProgressBarStyle
+import main.util.MediaData
 import java.io.File
 
 suspend fun download(url: String, client: HttpClient, reqBody: String = "") = client.request<String> {
@@ -54,13 +53,13 @@ suspend fun downloadTSFiles(
         val file = File("$outputFilePath/$fileName")
         file.writeBytes(data)
         k++
-        progressCallback(k,files.size)
+        progressCallback(k, files.size)
       }
     }
   }
 }
 
-suspend fun getVideoData(url: String, client: HttpClient): Triple<String, String, Int> {
+suspend fun getVideoData(url: String, client: HttpClient): MediaData {
   val id = url.substringAfterLast("/")
   val initialResponse = download(url, client)
   val (user, pass) = parseApiCred(initialResponse)?.destructured
@@ -84,18 +83,8 @@ suspend fun getVideoData(url: String, client: HttpClient): Triple<String, String
           client,
           downloadUrlParams
   )
-  //    Filter raw data to get correct file
-  val filteredMediaData = rawData.substringAfter("\"Files\":[{")
-          .substringBefore("}],\"Pictures")
-          .split("},{")
-          .find { it.contains("\"Format\":\"HLS_Web\"") }
-          ?: throw Exception("M3U8 file not found")
-  val m3Url = filteredMediaData
-          .substringAfter("\"URL\":\"")
-          .substringBefore("\"")
-  val mediaName = rawData.substringAfter("\"MediaName\":\"").substringBefore("\"")
-  val duration = filteredMediaData.substringAfter("\"Duration\":\"").substringBefore("\"").toInt()
-  return Triple(m3Url, mediaName, duration)
+  return Klaxon().parse<MediaData>(rawData)
+          ?: throw IllegalArgumentException("Invalid JSON")
 }
 
 fun parseApiCred(resp: String) =
