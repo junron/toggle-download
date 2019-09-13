@@ -36,11 +36,13 @@ suspend fun downloadBinary(url: String, client: HttpClient) = client.request<Byt
   method = HttpMethod.Get
 }
 
-suspend fun downloadTSFiles(files: MutableList<Pair<String, Int>>, client: HttpClient, outputDirectory: File) {
+suspend fun downloadTSFiles(
+        files: MutableList<Pair<String, Int>>, client: HttpClient, outputDirectory: File,
+        progressCallback: (current: Int, max: Int) -> Unit
+) {
   var totalDuration = 0
   val outputFilePath = outputDirectory.absolutePath
   var k = 0
-  val pb = ProgressBarBuilder().setInitialMax(files.size.toLong()).setUpdateIntervalMillis(10).setStyle(ProgressBarStyle.ASCII).build()
   withContext(Dispatchers.IO) {
     files.forEach {
       val (url, duration) = it
@@ -52,13 +54,7 @@ suspend fun downloadTSFiles(files: MutableList<Pair<String, Int>>, client: HttpC
         val file = File("$outputFilePath/$fileName")
         file.writeBytes(data)
         k++
-        pb.step()
-        //Done
-        if (k == files.size - 1) {
-          //            Update progressbar
-          delay(500)
-          pb.close()
-        }
+        progressCallback(k,files.size)
       }
     }
   }
