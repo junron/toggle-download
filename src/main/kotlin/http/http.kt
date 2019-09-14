@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import main.util.MediaData
+import main.util.SubtitleData
 import java.io.File
 
 suspend fun download(url: String, client: HttpClient, reqBody: String = "") = client.request<String> {
@@ -35,7 +36,7 @@ suspend fun downloadBinary(url: String, client: HttpClient) = client.request<Byt
   method = HttpMethod.Get
 }
 
-suspend fun downloadTSFiles(
+suspend fun downloadMediaFiles(
         files: MutableList<Pair<String, Int>>, client: HttpClient, outputDirectory: File,
         progressCallback: (current: Int, max: Int) -> Unit
 ) {
@@ -45,8 +46,12 @@ suspend fun downloadTSFiles(
   withContext(Dispatchers.IO) {
     files.forEach {
       val (url, duration) = it
-      val fileName = "video-${totalDuration.toString().padStart(4, '0')}" +
-              "-${(totalDuration + duration).toString().padStart(4, '0')}.mpeg"
+      val fileName = if (url.endsWith(".SRT")) {
+        "subtitles.srt"
+      } else {
+        "video-${totalDuration.toString().padStart(4, '0')}" +
+                "-${(totalDuration + duration).toString().padStart(4, '0')}.mpeg"
+      }
       totalDuration += duration
       launch {
         val data = downloadBinary(url, client)
@@ -84,6 +89,13 @@ suspend fun getVideoData(url: String, client: HttpClient): MediaData {
           downloadUrlParams
   )
   return Klaxon().parse<MediaData>(rawData)
+          ?: throw IllegalArgumentException("Invalid JSON")
+}
+
+suspend fun getSubtitles(url: String, client: HttpClient): SubtitleData {
+  val id = url.substringAfterLast("/")
+  val rawData = download("https://sub.toggle.sg/toggle_api/v1.0/apiService/getSubtitleFilesForMedia?mediaId=$id", client);
+  return Klaxon().parse<SubtitleData>(rawData)
           ?: throw IllegalArgumentException("Invalid JSON")
 }
 

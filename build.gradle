@@ -44,7 +44,7 @@ compileKotlin {
     }
 }
 
-mainClassName = "main.MainKt"
+mainClassName = "main.gui.GuiAppKt"
 
 shadowJar {
     baseName = "toggle-download"

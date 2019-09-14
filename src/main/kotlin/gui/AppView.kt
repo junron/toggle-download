@@ -1,7 +1,8 @@
 package main.gui
 
 import http.download
-import http.downloadTSFiles
+import http.downloadMediaFiles
+import http.getSubtitles
 import http.getVideoData
 import io.ktor.client.HttpClient
 import io.ktor.client.features.ClientRequestException
@@ -35,6 +36,7 @@ class AppView : View() {
   private val status: TaskStatus by inject()
   private lateinit var resolutions: List<Pair<String, String>>
   private lateinit var outputDirectory: File
+  private lateinit var subtitleUrl: String
 
   init {
     checkUrlBtn.action {
@@ -45,6 +47,8 @@ class AppView : View() {
       runAsync {
         try {
           runBlocking {
+            subtitleUrl = getSubtitles(url, client).subtitleFiles.find { it.subtitleFileLanguage == "English" }?.subtitleFileUrl
+                    ?: ""
             val mediaData = getVideoData(url, client)
             val m3Url = mediaData.files.getM3U8FileByFormat("HLS_Web")?.url
                     ?: return@runBlocking errorLabel("M3U8 file with suitable format not found")
@@ -53,8 +57,8 @@ class AppView : View() {
             mediaData.renderGUIComponent()
           }
         } catch (e: Exception) {
-          when(e){
-            is ConnectException, is ClientRequestException ->{
+          when (e) {
+            is ConnectException, is ClientRequestException -> {
               errorLabel("Connection failed: $e")
             }
             else -> {
@@ -103,8 +107,11 @@ class AppView : View() {
       runAsync {
         runBlocking {
           val tsFiles = parseStreamUrl(download(streamUrl, client))
+          if (subtitleUrl.isNotEmpty()) {
+            tsFiles.add(Pair(subtitleUrl, 0))
+          }
           updateMessage("0/${tsFiles.size}")
-          downloadTSFiles(tsFiles, client, outputDirectory) { current, max ->
+          downloadMediaFiles(tsFiles, client, outputDirectory) { current, max ->
             updateProgress(current.toLong(), max.toLong())
             updateMessage("$current/$max")
           }

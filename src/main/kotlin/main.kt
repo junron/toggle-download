@@ -1,7 +1,7 @@
 package main
 
 import http.download
-import http.downloadTSFiles
+import http.downloadMediaFiles
 import http.getVideoData
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.runBlocking
@@ -46,7 +46,7 @@ fun main() {
     val tsFiles = parseStreamUrl(download(streamUrl, client))
     val pb = ProgressBarBuilder().setInitialMax(tsFiles.size.toLong()).setUpdateIntervalMillis(10).setStyle(ProgressBarStyle.ASCII).build()
 
-    downloadTSFiles(tsFiles, client, outputDirectory) { current, max ->
+    downloadMediaFiles(tsFiles, client, outputDirectory) { current, max ->
       pb.step()
       if (current == max) pb.close()
     }
