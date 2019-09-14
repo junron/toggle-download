@@ -21,6 +21,7 @@ dependencies {
     implementation "me.tongfei:progressbar:0.7.0"
     implementation "no.tornado:tornadofx:1.7.19"
     implementation "com.beust:klaxon:5.0.1"
+    implementation "org.openjfx:javafx-graphics:11:win"
 }
 
 
