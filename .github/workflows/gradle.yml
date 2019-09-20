@@ -17,11 +17,8 @@ jobs:
         run: |
           chmod +x ./gradlew
           ./gradlew shadowJar
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@1.0.1
+      - name: Upload artifacts
+        uses: actions/upload-artifact@master
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: build/libs/toggle-download-all.jar
-          asset_name: toggle-download.jar
-          tag: latest
-          overwrite: true
+          path: build/libs/toggle-download-all.jar
+          name: toggle-download.jar
